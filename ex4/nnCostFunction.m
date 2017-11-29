@@ -63,12 +63,16 @@ Theta2_grad = zeros(size(Theta2));
 %
 % calculate the hypothesis
 x0 = ones(size(X(:, 1)));
-a = horzcat(x0, X);
-z2 = a * Theta1';
+a1 = horzcat(x0, X);
+
+z2 = a1 * Theta1';
 a2 = sigmoid(z2);
 a0 = ones(size(X(:, 1)));
-z3 = horzcat(a0, a2);
-h = sigmoid(z3 * Theta2');
+a2 = horzcat(a0, a2);
+
+z3 = a2 * Theta2';
+a3 = sigmoid(z3);
+h = a3;
 
 indexY = 1:num_labels;
 y = y == indexY;
@@ -83,38 +87,16 @@ regItem = lambda/(2*m) * (sum(sum(Theta1(:, 2:end).^2, 2, "double")) + sum(sum(T
 J = J + regItem;
 
 % backpropagation
-Delta2ofi = 0;
-Delta1ofi = 0;
-for t = 1:m
-    xt = X(t, :);
-    yt = y(t, :);
-    a1 = [1, xt];
-    z2 = a1 * Theta1';
-    a2 = sigmoid(z2);
-    a2 = [1, a2];
-    z3 = a2 * Theta2';
-    a3 = sigmoid(z3);
-    ht = a3;
 
-    delta3 = a3 - yt;
-    delta2 = (Theta2' * delta3')(2:end, :) .* sigmoidGradient(z2)';
+delta3 = h - y;
+delta2 = delta3 * Theta2 .* [ones(m, 1) sigmoidGradient(z2)];
 
-    Delta2ofi = Delta2ofi + a2' * delta3;
-    Delta1ofi = Delta1ofi + delta2 * a1;
-end
-
-Delta2ofi = Delta2ofi';
-
-Theta1_grad(1, :) = Delta1ofi(1, :)/m;
-Theta1_grad(2, :) = Delta1ofi(2, :)/m + lambda/m * Theta1(2, :);
-
-Theta2_grad(1, :) = Delta2ofi(1, :)/m;
-Theta2_grad(2, :) = Delta2ofi(2, :)/m + lambda/m * Theta2(2, :);
+Theta2_grad = (delta3' * a2)/m + lambda/m * [zeros(num_labels,1) Theta2(:,2:end)];
+Theta1_grad = (delta2(:, 2:end)' * a1)/m + lambda/m * [zeros(hidden_layer_size,1) Theta1(:,2:end)];
 
 % =========================================================================
 
 % Unroll gradients
 grad = [Theta1_grad(:) ; Theta2_grad(:)];
-
 
 end
