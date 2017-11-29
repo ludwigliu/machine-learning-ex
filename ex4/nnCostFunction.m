@@ -63,43 +63,53 @@ Theta2_grad = zeros(size(Theta2));
 %
 % calculate the hypothesis
 x0 = ones(size(X(:, 1)));
-X = horzcat(x0, X);
-activationOfL2 = X * Theta1';
+a = horzcat(x0, X);
+z2 = a * Theta1';
+a2 = sigmoid(z2);
 a0 = ones(size(X(:, 1)));
-activationOfL2 = horzcat(a0, activationOfL2);
-h = sigmoid(activationOfL2 * Theta2');
+z3 = horzcat(a0, a2);
+h = sigmoid(z3 * Theta2');
 
-K = size(unique(y))(1,1);
-%%%%% use for loop first
-totalK = 0;
-for k = 1:K
-    indexY = y == k;
-    yOfK = y .* indexY;
-    costOfK = sum( 1 / m * ( log(h)' * (-yOfK) - log(1 - h)' * (1 - y) ));
-    totalK = totalK + costOfK;
+indexY = 1:num_labels;
+y = y == indexY;
+
+J = sum(sum( (-y).*log(h) - (1 - y).*log(1 - h), 2))/m;
+
+
+% compute regularized item
+% theta inclues 1 items, remove it before calculation
+regItem = lambda/(2*m) * (sum(sum(Theta1(:, 2:end).^2, 2, "double")) + sum(sum(Theta2(:, 2:end).^2, 2, "double")));
+
+J = J + regItem;
+
+% backpropagation
+Delta2ofi = 0;
+Delta1ofi = 0;
+for t = 1:m
+    xt = X(t, :);
+    yt = y(t, :);
+    a1 = [1, xt];
+    z2 = a1 * Theta1';
+    a2 = sigmoid(z2);
+    a2 = [1, a2];
+    z3 = a2 * Theta2';
+    a3 = sigmoid(z3);
+    ht = a3;
+
+    delta3 = a3 - yt;
+    delta2 = (Theta2' * delta3')(2:end, :) .* sigmoidGradient(z2)';
+
+    Delta2ofi = Delta2ofi + a2' * delta3;
+    Delta1ofi = Delta1ofi + delta2 * a1;
 end
 
-J = totalK;
-%standY = [10 1 2 3 4 5 6 7 8 9];
-%x0 = 1;
-%for i = 1:m
-%    xi = horzcat(x0, X(i, :));
-%    ai0 = xi * Theta1';
-%    aiOfL2 = horzcat(x0, ai0);
-%    h = sigmoid(aiOfL2 * Theta2');
-%    
-%    costOfK = 0;
-%    for k = 1:K
-%        yK = standY == y(i, 1);
-%        costOfK = costOfK + yK * log(h)' + (1 - yK) * log(1 - h)';
-%    end
-%    
-%    J = J + costOfK;
-%end
-%
-%J = -1/m * J; 
+Delta2ofi = Delta2ofi';
 
-% -------------------------------------------------------------
+Theta1_grad(1, :) = Delta1ofi(1, :)/m;
+Theta1_grad(2, :) = Delta1ofi(2, :)/m + lambda/m * Theta1(2, :);
+
+Theta2_grad(1, :) = Delta2ofi(1, :)/m;
+Theta2_grad(2, :) = Delta2ofi(2, :)/m + lambda/m * Theta2(2, :);
 
 % =========================================================================
 
