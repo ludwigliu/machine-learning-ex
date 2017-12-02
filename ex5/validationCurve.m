@@ -39,13 +39,15 @@ error_val = zeros(length(lambda_vec), 1);
 %
 %
 
+for k = 1:length(lambda_vec)
+	lambda = lambda_vec(k);
+    thetaTrain = trainLinearReg(X, y, lambda);
+    [JTrain, grad] = linearRegCostFunction(X, y, thetaTrain, 0);
+    [JVal, grad] = linearRegCostFunction(Xval, yval, thetaTrain, 0);
 
-
-
-
-
-
-
+    error_train(k) = JTrain;
+    error_val(k) = JVal;
+end
 
 
 % =========================================================================

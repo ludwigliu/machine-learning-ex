@@ -218,3 +218,10 @@ end
 
 fprintf('Program paused. Press enter to continue.\n');
 pause;
+
+%% Compute test set error
+lambda = 3;
+thetaTrain = trainLinearReg(X_poly, y, lambda);
+[JTest, grad] = linearRegCostFunction(X_poly_test, ytest, thetaTrain, 0);
+fprintf('Test set cost: %f\n', JTest);
+pause;
